@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 동물 타자 연습</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for cute font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply custom font and background */
+        body {
+            font-family: 'Gaegu', cursive;
+            background-color: #f0f9ff; /* Light blue sky color */
+            background-image:
+                radial-gradient(circle at 15% 50%, #ffffff 2%, transparent 2.5%),
+                radial-gradient(circle at 85% 30%, #ffffff 2%, transparent 2.5%);
+            background-size: 40em 40em;
+        }
+        .game-container {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        #word-display {
+            font-size: 2.5rem;
+            letter-spacing: 0.1em;
+        }
+        #word-input {
+            font-size: 1.5rem;
+        }
+        /* Animation for correct word completion */
+        .correct-animation { animation: correct 0.5s ease-in-out; }
+        @keyframes correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        /* --- Rabbit Character Styles --- */
+        #character {
+            width: 80px;
+            height: 80px;
+            background-color: #f1f5f9; /* A soft, rabbit-like white */
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Egg-like shape for the head */
+            position: relative;
+            margin: 20px auto 0 auto; /* Margin for ears */
+            border: 4px solid #e11d48; /* A cute pink border */
+        }
+        /* Rabbit Ears */
+        #character::before, #character::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 60px;
+            background: #f1f5f9;
+            border: 4px solid #e11d48;
+            border-bottom: none; /* Ears are open at the bottom */
+            border-radius: 50% 50% 0 0;
+            top: -45px; /* Position above the head */
+        }
+        #character::before {
+            left: 5px;
+            transform: rotate(-20deg);
+        }
+        #character::after {
+            right: 5px;
+            transform: rotate(20deg);
+        }
+        #character-eyes {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+        .eye {
+            width: 8px;
+            height: 12px;
+            background-color: #333;
+            border-radius: 50%;
+        }
+        #character-mouth {
+            width: 25px;
+            height: 12px;
+            border: 3px solid #333;
+            border-top-color: transparent;
+            border-radius: 0 0 25px 25px;
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        /* Item styles */
+        .item-slot { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
+        .hat-style-1 {
+            width: 50px;
+            height: 20px;
+            background-color: #ef4444; /* Red */
+            border-radius: 10px 10px 0 0;
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-5deg);
+            border: 3px solid #b91c1c;
+        }
+        .glasses-style-1 {
+            width: 70px;
+            height: 20px;
+            border: 5px solid #000;
+            border-radius: 15px;
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        /* --- Coin Earning Effect --- */
+        .coin-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #f59e0b; /* A golden coin color */
+            font-size: 1.75rem;
+            font-weight: bold;
+            animation: float-up 1s ease-out forwards;
+            white-space: nowrap;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        @keyframes float-up {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -150%); /* Float upwards */
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="game-container text-center p-6 md:p-8 bg-white/70 rounded-3xl shadow-2xl max-w-4xl w-full">
+        <h1 class="text-4xl md:text-5xl font-bold text-sky-600 mb-2">귀여운 동물 타자 연습</h1>
+        <p class="text-gray-500 mb-4 text-lg">동물 친구들과 함께 타자 실력을 키워봐요!</p>
+
+        <!-- Level Selection Screen -->
+        <div id="level-selection" class="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 mb-6">
+            <button data-level="easy" class="level-btn bg-green-400 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 text-xl">🐣 쪼꼬미 (단어)</button>
+            <button data-level="medium" class="level-btn bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 text-xl">🐰 쫑알쫑알 (짧은 글)</button>
+            <button data-level="hard" class="level-btn bg-red-400 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 text-xl">🦁 척척박사 (긴 글)</button>
+        </div>
+
+        <!-- Main Game Area (initially hidden) -->
+        <div id="game-area" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <!-- Character & Coins -->
+                <div class="bg-rose-100 p-4 rounded-xl flex flex-col items-center justify-center relative min-h-[200px]">
+                    <div id="coin-effect-container" class="absolute inset-0 pointer-events-none z-10"></div>
+                    <div id="character">
+                        <div id="character-eyes">
+                            <div class="eye"></div>
+                            <div class="eye"></div>
+                        </div>
+                        <div id="character-mouth"></div>
+                        <div id="hat-slot" class="item-slot"></div>
+                        <div id="glasses-slot" class="item-slot"></div>
+                    </div>
+                    <div class="mt-3 text-rose-800 text-xl font-bold">💰 <span id="coin-display">0</span> 코인</div>
+                     <button id="shop-open-btn" class="mt-2 bg-rose-500 hover:bg-rose-600 text-white font-bold py-1 px-4 rounded-full text-sm">꾸미기</button>
+                </div>
+                <!-- Stats -->
+                <div class="col-span-1 md:col-span-2 bg-sky-100 rounded-xl p-4 grid grid-cols-2 gap-4 text-sky-800 text-lg md:text-xl content-center">
+                    <!-- Timer removed from display -->
+                    <div>정확도: <span id="accuracy" class="font-bold">100</span>%</div>
+                    <div>타수: <span id="wpm" class="font-bold">0</span></div>
+                </div>
+            </div>
+
+            <div id="word-display-container" class="bg-white p-6 md:p-8 rounded-2xl shadow-inner mb-4 min-h-[120px] flex items-center justify-center">
+                <div id="word-display" class="font-bold text-gray-700 leading-relaxed">레벨을 선택하고 시작하세요!</div>
+            </div>
+
+            <input type="text" id="word-input" class="w-full p-4 border-4 border-sky-300 rounded-xl text-center focus:outline-none focus:border-sky-500 transition" placeholder="여기에 따라쳐보세요" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled>
+
+            <button id="restart-btn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition-transform transform hover:scale-105">다른 레벨 선택</button>
+        </div>
+    </div>
+
+    <!-- Message Box (Modal) -->
+    <div id="message-box" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-lg text-center" id="message-content">
+            <h2 id="message-title" class="text-3xl font-bold mb-4">참 잘했어요!</h2>
+            <p id="message-text" class="text-lg mb-6">모든 단어를 맞혔어요!</p>
+            <button id="message-close-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full">확인</button>
+        </div>
+    </div>
+
+    <!-- Shop (Modal) -->
+    <div id="shop-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="bg-amber-50 w-full max-w-2xl p-6 rounded-2xl shadow-lg text-center relative">
+            <h2 class="text-3xl font-bold text-amber-800 mb-4">✨ 꾸미기 상점 ✨</h2>
+            <div id="shop-items-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto p-2">
+                <!-- Shop items will be generated here -->
+            </div>
+            <button id="shop-close-btn" class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold w-8 h-8 rounded-full text-lg">X</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const levelSelection = document.getElementById('level-selection');
+        const gameArea = document.getElementById('game-area');
+        const wordDisplay = document.getElementById('word-display');
+        const wordInput = document.getElementById('word-input');
+        // const timeEl = document.getElementById('time'); // Timer display element removed
+        const accuracyEl = document.getElementById('accuracy');
+        const wpmEl = document.getElementById('wpm');
+        const restartBtn = document.getElementById('restart-btn');
+        const messageBox = document.getElementById('message-box');
+        const messageContent = document.getElementById('message-content');
+        const messageTitle = document.getElementById('message-title');
+        const messageText = document.getElementById('message-text');
+        const messageCloseBtn = document.getElementById('message-close-btn');
+        const coinDisplay = document.getElementById('coin-display');
+        const shopOpenBtn = document.getElementById('shop-open-btn');
+        const shopModal = document.getElementById('shop-modal');
+        const shopCloseBtn = document.getElementById('shop-close-btn');
+        const shopItemsGrid = document.getElementById('shop-items-grid');
+        const hatSlot = document.getElementById('hat-slot');
+        const glassesSlot = document.getElementById('glasses-slot');
+
+        // --- Word & Shop Data ---
+        const words = { /* ... same as before ... */ };
+        words.easy = ['개', '곰', '소', '말', '양', '쥐', '닭', '용', '뱀', '토끼', '고양이', '강아지', '병아리', '송아지', '사자', '호랑이', '코끼리', '기린', '하마', '악어', '원숭이', '다람쥐'];
+        words.medium = ['깡충깡충 토끼가 뛰어놀아요.', '귀여운 아기 고양이가 잠을 자요.', '어미 닭이 병아리들을 품고 있어요.', '코끼리가 긴 코로 물을 뿜어요.', '다람쥐가 도토리를 맛있게 먹어요.', '얼룩말의 줄무늬가 멋져요.', '아기 곰이 엄마 곰을 따라가요.', '목이 긴 기린이 나뭇잎을 먹어요.', '연못 속 개구리가 노래를 불러요.', '뒤뚱뒤뚱 펭귄들이 걸어가요.'];
+        words.hard = ['깊은 숲속 작은 공터에서 동물 친구들이 모여 음악회를 열었어요.', '노래를 가장 잘하는 꾀꼬리가 아름다운 목소리로 노래를 시작했어요.', '그러자 풀벌레들이 예쁜 화음을 넣었고, 딱따구리는 나무를 쪼며 신나는 리듬을 만들었답니다.', '폴짝폴짝 개구리들은 합창을 하고, 덩치 큰 곰 아저씨는 멋진 춤을 추었어요.', '숲속의 모든 동물들이 함께 즐기는 정말 멋진 음악회였답니다.'];
+        
+        const shopItems = [
+            { id: 'hat1', name: '빨간 모자', price: 100, type: 'hat', className: 'hat-style-1' },
+            { id: 'glasses1', name: '검정 선글라스', price: 150, type: 'glasses', className: 'glasses-style-1' },
+        ];
+
+        // --- Game State ---
+        let gameState = {};
+        let currentLevelWords = [], currentWordIndex = 0, isPlaying = false, time = 0, timer, totalTyped = 0, totalCorrect = 0;
+
+        // --- Core Functions ---
+        function init() {
+            loadGameState();
+            document.querySelectorAll('.level-btn').forEach(b => b.addEventListener('click', () => startGame(b.dataset.level)));
+            wordInput.addEventListener('input', handleInput);
+            restartBtn.addEventListener('click', () => {
+                gameArea.classList.add('hidden');
+                levelSelection.classList.remove('hidden');
+                resetStats();
+            });
+            messageCloseBtn.addEventListener('click', hideMessageBox);
+            shopOpenBtn.addEventListener('click', openShop);
+            shopCloseBtn.addEventListener('click', () => shopModal.classList.add('hidden'));
+        }
+
+        function startGame(level) {
+            levelSelection.classList.add('hidden');
+            gameArea.classList.remove('hidden');
+            currentLevelWords = [...words[level]].sort(() => 0.5 - Math.random());
+            currentWordIndex = 0;
+            isPlaying = false;
+            resetStats();
+            showNextWord();
+            wordInput.value = '';
+            wordInput.disabled = false;
+            wordInput.focus();
+        }
+
+        function handleInput() {
+            if (!isPlaying && wordInput.value.length > 0) {
+                isPlaying = true;
+                timer = setInterval(updateTime, 1000); // Timer logic still runs for WPM calculation
+            }
+            const currentTypedText = wordInput.value;
+            const targetText = currentLevelWords[currentWordIndex];
+            const displaySpans = wordDisplay.querySelectorAll('span');
+            let isWordCorrect = true;
+            displaySpans.forEach((charSpan, index) => {
+                const typedChar = currentTypedText[index];
+                if (typedChar == null) {
+                    charSpan.className = '';
+                    isWordCorrect = false;
+                } else if (typedChar === charSpan.innerText) {
+                    charSpan.className = 'text-green-500 font-bold';
+                } else {
+                    charSpan.className = 'text-red-500 bg-red-100 rounded';
+                    isWordCorrect = false;
+                }
+            });
+
+            if (isWordCorrect && currentTypedText.length === targetText.length) {
+                const earnedCoins = targetText.length * 5; // 1 char = 5 coins
+                gameState.coins += earnedCoins;
+                showCoinEffect(earnedCoins); // Show visual effect for earning coins
+                updateCoinDisplay();
+                saveGameState();
+
+                totalTyped += targetText.length;
+                totalCorrect += targetText.length;
+                currentWordIndex++;
+                wordInput.value = '';
+                wordDisplay.classList.add('correct-animation');
+                setTimeout(() => wordDisplay.classList.remove('correct-animation'), 500);
+                showNextWord();
+            }
+            updateStats();
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(timer);
+            wordInput.disabled = true;
+            wordDisplay.innerHTML = "<span class='text-green-500'>🎉 레벨 완료! 🎉</span>";
+            showMessageBox('참 잘했어요!', `최종 타수는 ${wpmEl.innerText}, 정확도는 ${accuracyEl.innerText}% 입니다!`);
+        }
+
+        // --- Stat & Display Functions ---
+        function resetStats() { 
+            clearInterval(timer); 
+            time = 0; 
+            totalTyped = 0; 
+            totalCorrect = 0; 
+            // timeEl.innerText = '0'; // Removed
+            accuracyEl.innerText = '100'; 
+            wpmEl.innerText = '0'; 
+        }
+        function showNextWord() { if (currentWordIndex >= currentLevelWords.length) { endGame(); return; } const word = currentLevelWords[currentWordIndex]; wordDisplay.innerHTML = word.split('').map(char => `<span>${char}</span>`).join(''); }
+        function updateTime() { time++; updateStats(); }
+        function updateStats() { 
+            // timeEl.innerText = time; // Removed
+            if (time > 0) { 
+                const wpm = Math.round((wordInput.value.length + totalTyped) * 5 / time * 60 / 5); // Using standard WPM formula
+                wpmEl.innerText = wpm; 
+            } 
+            let currentCorrect = 0; 
+            const currentTypedText = wordInput.value; 
+            const targetText = currentLevelWords[currentWordIndex] || ''; 
+            for(let i = 0; i < currentTypedText.length; i++) { 
+                if (currentTypedText[i] === targetText[i]) { currentCorrect++; } 
+            } 
+            const accuracy = (totalTyped + currentTypedText.length) > 0 
+                ? Math.round(((totalCorrect + currentCorrect) / (totalTyped + currentTypedText.length)) * 100) 
+                : 100; 
+            accuracyEl.innerText = accuracy; 
+        }
+        function showMessageBox(title, text) { messageTitle.innerText = title; messageText.innerText = text; messageBox.classList.remove('hidden'); }
+        function hideMessageBox() { messageBox.classList.add('hidden'); gameArea.classList.add('hidden'); levelSelection.classList.remove('hidden'); }
+
+        // --- New Character & Shop Functions ---
+        function showCoinEffect(amount) {
+            const coinEffectContainer = document.getElementById('coin-effect-container');
+            const effectEl = document.createElement('div');
+            effectEl.className = 'coin-effect';
+            effectEl.innerText = `+${amount} �`;
+            coinEffectContainer.appendChild(effectEl);
+            setTimeout(() => {
+                effectEl.remove();
+            }, 1000); // Remove after 1 second (animation duration)
+        }
+
+        function loadGameState() {
+            const savedData = JSON.parse(localStorage.getItem('typingGameState'));
+            gameState = {
+                coins: 0,
+                purchasedItems: [],
+                equippedItems: { hat: null, glasses: null },
+                ...savedData
+            };
+            updateCoinDisplay();
+            renderCharacter();
+        }
+
+        function saveGameState() {
+            localStorage.setItem('typingGameState', JSON.stringify(gameState));
+        }
+
+        function updateCoinDisplay() {
+            coinDisplay.innerText = gameState.coins;
+        }
+
+        function renderCharacter() {
+            hatSlot.innerHTML = '';
+            glassesSlot.innerHTML = '';
+
+            if (gameState.equippedItems.hat) {
+                const item = shopItems.find(i => i.id === gameState.equippedItems.hat);
+                if (item) hatSlot.innerHTML = `<div class="${item.className}"></div>`;
+            }
+            if (gameState.equippedItems.glasses) {
+                const item = shopItems.find(i => i.id === gameState.equippedItems.glasses);
+                if (item) glassesSlot.innerHTML = `<div class="${item.className}"></div>`;
+            }
+        }
+
+        function openShop() {
+            shopItemsGrid.innerHTML = '';
+            shopItems.forEach(item => {
+                const isPurchased = gameState.purchasedItems.includes(item.id);
+                const isEquipped = gameState.equippedItems[item.type] === item.id;
+
+                const itemCard = document.createElement('div');
+                itemCard.className = 'bg-white p-4 rounded-lg shadow';
+                
+                let buttonHtml;
+                if (isEquipped) {
+                    buttonHtml = `<button class="w-full mt-2 bg-gray-400 text-white py-1 rounded" disabled>장착중</button>`;
+                } else if (isPurchased) {
+                    buttonHtml = `<button data-item-id="${item.id}" data-item-type="${item.type}" class="w-full mt-2 bg-green-500 hover:bg-green-600 text-white py-1 rounded equip-btn">장착하기</button>`;
+                } else {
+                    buttonHtml = `<button data-item-id="${item.id}" class="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white py-1 rounded buy-btn">💰 ${item.price}</button>`;
+                }
+
+                itemCard.innerHTML = `
+                    <div class="w-20 h-20 bg-gray-200 mx-auto rounded-md flex items-center justify-center font-bold text-gray-500">${item.name}</div>
+                    ${buttonHtml}
+                `;
+                shopItemsGrid.appendChild(itemCard);
+            });
+            shopModal.classList.remove('hidden');
+        }
+
+        // Event delegation for shop buttons
+        shopItemsGrid.addEventListener('click', (e) => {
+            if (e.target.matches('.buy-btn')) {
+                const itemId = e.target.dataset.itemId;
+                const item = shopItems.find(i => i.id === itemId);
+                if (gameState.coins >= item.price) {
+                    gameState.coins -= item.price;
+                    gameState.purchasedItems.push(item.id);
+                    updateCoinDisplay();
+                    saveGameState();
+                    openShop(); // Re-render shop
+                } else {
+                    alert('코인이 부족해요!');
+                }
+            } else if (e.target.matches('.equip-btn')) {
+                const itemId = e.target.dataset.itemId;
+                const itemType = e.target.dataset.itemType;
+                gameState.equippedItems[itemType] = itemId;
+                saveGameState();
+                renderCharacter();
+                openShop(); // Re-render shop
+            }
+        });
+
+        // --- Start the engine! ---
+        init();
+    </script>
+</body>
+</html>
+�
